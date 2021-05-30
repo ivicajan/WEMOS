@@ -26,12 +26,10 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 // GPS setup GPIO 16 -> GPS RX , GPIO 17 -> GPS TX
-// self.uart_gps = UART(2, baudrate=9600, bits=8, parity=None, stop=1, tx=33, rx=32, timeout=50)
 static const int RXPin = 16, TXPin = 17;
 static const uint32_t GPSBaud = 9600;
 TinyGPSPlus gps;
 HardwareSerial ss(1);
-//SoftwareSerial ss(RXPin, TXPin);
 
 #include <Time.h>
 const int time_offset = 8*3600;  // Local Time (AWST)
@@ -64,10 +62,8 @@ void setup()
 void loop() 
 {
   GetTemp();
-  delay(50);
 
   SerialGPSDecode(ss, gps);
-  delay(50);
 
   DisplayStuff();
   delay(500);
@@ -98,29 +94,29 @@ void DisplayStuff() {
   u8g2.clearBuffer();  
   u8g2.setFont(u8g_font_profont12);
   u8g2.setCursor(1,y1);  
-  u8g2.print("NSAT:");
+  u8g2.print("S:");
   u8g2.print(tSat);
+  u8g2.setCursor(30,y1);  
+  u8g2.print("A:");
+  u8g2.print(tAge);
   u8g2.setCursor(80,y1);
   u8g2.print(tTime);
-  u8g2.setFont(u8g2_font_logisoso34_tr);
-  u8g2.setCursor(0,y2);
+  u8g2.setFont(u8g2_font_logisoso42_tf);
+  u8g2.setCursor(0,y3);
   u8g2.print(tSpeed);
   u8g2.setFont(u8g2_font_logisoso30_tf);
   u8g2.setCursor(68,y2);
   u8g2.print(tTemp);
   u8g2.setFont(u8g_font_profont12);
-  u8g2.setCursor(65,40);  
+/*  u8g2.setCursor(65,40);  
   u8g2.print("km");
   u8g2.setCursor(65,50);  
-  u8g2.print("h");
+  u8g2.print("h");  */
   u8g2.setCursor(123,25);  
   u8g2.print("O");
-  u8g2.setCursor(2,y3);
-  u8g2.print("TD=");
+  u8g2.setCursor(90,y3);
+  u8g2.print("TD:");
   u8g2.print(tTDist);
-  u8g2.setCursor(80,y3);
-  u8g2.print("AGE:");
-  u8g2.print(tAge);
   u8g2.sendBuffer();  
 }
 
@@ -182,31 +178,34 @@ void SerialGPSDecode(Stream &mySerial, TinyGPSPlus &myGPS) {
         { gpsLocationOK = true;
           tAge = String(gps.location.age());
           tLocation = String(gps.location.lng(),6) + "," + String(gps.location.lat(),6);
-          //tSpeed = String(gps.speed.kmph(),0);
-          if (gps.speed.kmph()<10) 
+          int speed = gps.speed.kmph();
+          tSpeed = String(speed);
+        /*  if (speed < 10) 
           {
-          tSpeed = "  " + String(gps.speed.kmph(),0);
+          tSpeed = "  " + String(speed);
           }
-          else if ((gps.speed.kmph() > 10) && (gps.speed.kmph()<100))
+          else if ((speed > 10) && (speed <100))
           {
-          tSpeed = " " + String(gps.speed.kmph(),0);
+          tSpeed = " " + String(speed);
           } else {
-          tSpeed = String(gps.speed.kmph(),0);
-          }
+          tSpeed = String(speed);
+          }  */
           if ((last_lat != NULL))
           { int distance = gps.distanceBetween(gps.location.lat(),gps.location.lng(),last_lat,last_lng);  // in meters
             Serial.println("distance =" + String(distance));
             tDist = String(distance);
             last_lng = gps.location.lng();
             last_lat = gps.location.lat();
-            if ((distance > 2) && (gps.location.age()<1000)) {
+            if ((distance > 2) && (gps.location.age()<500)) {
             total_distance += distance;
-           } else {
-            tDist = "?";  
-            }
-           }
+           }  
+          }
         }  
           tTDist= String(total_distance);
           Serial.println("total distance =" + String(total_distance));
           csvOutStr = tDateTime + "," + tLocation + "," + tTemp + "," + tSpeed + "\n";
+          if (gps.location.age()>500) {
+          tTime = "--:--:--";
+          tSpeed = "---";
+          }
 }
