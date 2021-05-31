@@ -196,7 +196,8 @@ void SerialGPSDecode(Stream &mySerial, TinyGPSPlus &myGPS) {
             tDist = String(distance);
             last_lng = gps.location.lng();
             last_lat = gps.location.lat();
-            if ((distance > 2) && (gps.location.age()<500)) {
+           // if ((distance > 2) && (gps.location.age()<500)) {
+            if ((distance > 2)) {
             total_distance += distance;
            }  
           }
@@ -204,8 +205,10 @@ void SerialGPSDecode(Stream &mySerial, TinyGPSPlus &myGPS) {
           tTDist= String(total_distance);
           Serial.println("total distance =" + String(total_distance));
           csvOutStr = tDateTime + "," + tLocation + "," + tTemp + "," + tSpeed + "\n";
-          if (gps.location.age()>500) {
+          if (gpsDateOK == false) {
           tTime = "--:--:--";
+          }
+          if (gpsLocationOK == false) {
           tSpeed = "---";
           }
 }
