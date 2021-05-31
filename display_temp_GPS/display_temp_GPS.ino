@@ -210,5 +210,6 @@ void SerialGPSDecode(Stream &mySerial, TinyGPSPlus &myGPS) {
           }
           if (gpsLocationOK == false) {
           tSpeed = "---";
+          tAge = "--";
           }
 }
