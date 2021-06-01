@@ -199,11 +199,11 @@ void SerialGPSDecode(Stream &mySerial, TinyGPSPlus &myGPS) {
           { float distance = gps.distanceBetween(gps.location.lat(),gps.location.lng(),last_lat,last_lng);  // in meters
             Serial.println("distance =" + String(distance));
             tDist = String(distance);
-           // if ((distance > 2) && (gps.location.age()<500)) {
+            if ((distance > 2) && (speed > 2)) 
            // if ((distance > 2)) 
             {
             total_distance += distance;
-           }  
+            }  
           }
           last_lng = gps.location.lng();
           last_lat = gps.location.lat();
