@@ -38,7 +38,7 @@ byte last_second, Second, Minute, Hour, Day, Month;
 int Year;
 double last_lng = NULL;
 double last_lat = NULL;
-int total_distance;
+float total_distance;
 String tTemp, tSpeed;
 String csvOutStr = "";
 String tTime, tDate, tDateTime;
@@ -85,7 +85,7 @@ void GetTemp() {
   } else {
   tTemp = String(temp,0);
   }
-  Serial.println(tTemp); 
+//  Serial.println(tTemp); 
 }
 
 void DisplayStuff() {
@@ -117,7 +117,7 @@ void DisplayStuff() {
 */
   u8g2.setCursor(123,25);  
   u8g2.print("O");
-  u8g2.setCursor(90,y3);
+  u8g2.setCursor(85,y3);
   u8g2.print("TD:");
   u8g2.print(tTDist);
   u8g2.sendBuffer();  
@@ -126,14 +126,14 @@ void DisplayStuff() {
 
 void SerialGPSDecode(Stream &mySerial, TinyGPSPlus &myGPS) {
     unsigned long start = millis();
+    gpsDateOK = false;
+    gpsLocationOK = false;
     do
     {
      while (ss.available() > 0)
      gps.encode(ss.read());
     } while (millis() - start < 800);
-      gpsDateOK = false;
-      gpsLocationOK = false;
-       if (gps.date.isValid()) 
+       if ((gps.date.isValid()) && (gps.location.age()<1000)) 
         { gpsDateOK = true;
           tSat = String(gps.satellites.value());
           Minute = gps.time.minute();
@@ -175,9 +175,10 @@ void SerialGPSDecode(Stream &mySerial, TinyGPSPlus &myGPS) {
           tTime = thour + ":" + tminute + ":" + tsecond;
           tDateTime = tDate + " " + tTime;
           last_second = gps.time.second();
-          Serial.println(tDateTime);
+//          Serial.println(tDateTime);
         }
-        if (gps.location.isValid()) 
+
+        if ((gps.location.isValid()) && (gps.location.age()<1000)) 
         { gpsLocationOK = true;
           tAge = String(gps.location.age());
           tLocation = String(gps.location.lng(),6) + "," + String(gps.location.lat(),6);
@@ -197,21 +198,17 @@ void SerialGPSDecode(Stream &mySerial, TinyGPSPlus &myGPS) {
         */
           if ((last_lat != NULL))
           { float distance = gps.distanceBetween(gps.location.lat(),gps.location.lng(),last_lat,last_lng);  // in meters
-            Serial.println("distance =" + String(distance));
+//            Serial.println("distance =" + String(distance));
             tDist = String(distance);
             if ((distance > 2) && (speed > 2)) 
            // if ((distance > 2)) 
             {
-            total_distance += distance;
+            total_distance += distance/1000.0;
             }  
           }
           last_lng = gps.location.lng();
           last_lat = gps.location.lat();
         }  
-          
-          tTDist= String(total_distance);
-          Serial.println("total distance =" + String(total_distance));
-          csvOutStr = tDateTime + "," + tLocation + "," + tTemp + "," + tSpeed + "\n";
           
           if (gpsDateOK != true) 
           {
@@ -224,4 +221,12 @@ void SerialGPSDecode(Stream &mySerial, TinyGPSPlus &myGPS) {
             tAge = "--";
             tDist = "--";
           }
+          tTDist= String(total_distance,1);
+/*          Serial.println("total distance =" + String(total_distance));
+          Serial.println("date flag:" + String(gpsDateOK));
+          Serial.println("location flag:" + String(gpsLocationOK));
+          csvOutStr = tDateTime + "," + tLocation + "," + tTemp + "," + tSpeed + "\n";
+*/          
+          csvOutStr = tDateTime + "," + tLocation + "," + tTemp + "," + tSpeed + "," + tDist + "," + tTDist + "\n";
+          Serial.print(csvOutStr);          
 }
